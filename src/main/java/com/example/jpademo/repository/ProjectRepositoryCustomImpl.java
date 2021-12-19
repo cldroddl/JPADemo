@@ -21,7 +21,7 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
     private final JPAQueryFactory jpaQueryFactory;
 
     @Override
-    public List<ProjectDto> selectProjects() {
+    public List<ProjectDto> selectProjectsWithSubQuery() {
         List<ProjectDto> listDto = jpaQueryFactory
                 .select(new QProjectDto(
                         project.id,
@@ -62,5 +62,22 @@ public class ProjectRepositoryCustomImpl implements ProjectRepositoryCustom {
 //                .from(project)
 //                .fetch();
 //        return listDto;
+    }
+
+    @Override
+    public List<ProjectDto> selectProjectsWithJoin() {
+        List<ProjectDto> list = jpaQueryFactory
+                .select(new QProjectDto(project.id,
+                        project.name,
+                        applyPosition.id.count()))
+                .from(project)
+                .leftJoin(projectPosition)
+                .on(project.eq(projectPosition.project))
+                .leftJoin(applyPosition)
+                .on(projectPosition.eq(applyPosition.projectPosition))
+//                .groupBy(project)
+                .groupBy(project, projectPosition.project.id)
+                .fetch();
+        return list;
     }
 }
